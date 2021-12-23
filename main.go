@@ -1,6 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"github.com/anggunpermata/fresh-fruit/config"
+	"github.com/anggunpermata/fresh-fruit/helper/logger"
+	"github.com/anggunpermata/fresh-fruit/server/routes"
+	"github.com/labstack/echo"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
@@ -21,5 +26,19 @@ func init(){
 }
 
 func main() {
+	e := echo.New()
+
+	routes.New(e)
+	config.InitPort()
+	config.CORSWithConfig(e)
+
+	e.Use(logger.MiddlewareLogging)
+	e.HTTPErrorHandler = logger.ErrorHandler
+
+	port := fmt.Sprintf(":%d", config.PORT)
+	logger.MakeLogEntry(nil).Infof("starting fresh-fruit version: %s", config.LoadEnv("VERSION"))
+	if err := e.Start(port); err != nil{
+		e.Logger.Fatal(err)
+	}
 
 }
